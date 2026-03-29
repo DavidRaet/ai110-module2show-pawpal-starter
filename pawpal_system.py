@@ -82,6 +82,10 @@ class Owner:
         self.name = name
         self.preferences = preferences
         self.pets: list[Pet] = pets if pets is not None else []
+    
+    def add_pet(self, pet: Pet) -> None:
+        """Add a pet to the owner's list of pets."""
+        self.pets.append(pet)
 
 
 class Task:
@@ -184,6 +188,17 @@ class PetCareService:
         else:
             # Send a warning to the UI that the task was not found (optional)
             pass
+    
+    def get_tasks_for_pet(self, pet: Pet) -> list[Task]:
+        """Return a list of tasks associated with a given pet.
+
+        Args:
+            pet: The Pet whose tasks should be returned.
+
+        Returns:
+            A list of Task objects linked to the specified pet.
+        """
+        return [task for task in self._tasks if task.pet is pet]
 
     # ------------------------------------------------------------------
     # Scheduling
