@@ -155,7 +155,7 @@ class PetCareService:
             task: The Task to add.
         """
         # TODO: Append task to self._tasks
-        pass
+        self._tasks.append(task)
 
     def remove_task(self, task: Task) -> None:
         """Remove a task from the service's internal task list.
@@ -164,7 +164,11 @@ class PetCareService:
             task: The Task to remove.
         """
         # TODO: Remove task from self._tasks (handle case where task is not present)
-        pass
+        if task in self._tasks:
+            self._tasks.remove(task)
+        else:
+            # Send a warning to the UI that the task was not found (optional)
+            pass
 
     def update_task(self, task: Task) -> None:
         """Replace an existing task entry with updated values.
@@ -173,7 +177,13 @@ class PetCareService:
             task: The Task with updated fields (matched by identity or title).
         """
         # TODO: Find the matching task in self._tasks and update its fields
-        pass
+        for i, existing_task in enumerate(self._tasks):
+            if existing_task is task or existing_task.title == task.title:
+                self._tasks[i] = task
+                break
+        else:
+            # Send a warning to the UI that the task was not found (optional)
+            pass
 
     # ------------------------------------------------------------------
     # Scheduling
