@@ -225,20 +225,22 @@ class PetCareService:
         )
         return schedule
 
-    def _is_conflict(self, task1: Task, task2: Task) -> bool:
-        """Check whether two tasks overlap in time.
+    def filter_tasks_by_status(self, status: Status) -> list[Task]:
+        """Return a list of tasks that match a given status.
 
         Args:
-            task1: First task (must have task1.time set).
-            task2: Second task (must have task2.time set).
-
+            status: The Status to filter by (e.g. Status.COMPLETED).
         Returns:
-            True if the tasks overlap; False otherwise.
+            A list of Task objects that have the specified status.
         """
-        # TODO: Compute end times for both tasks using time + timedelta(minutes=duration_minutes)
-        # TODO: Return True if the intervals overlap, False if they are disjoint
-        if task1.time is None or task2.time is None:
-            return False  # Unschedulable tasks are not considered conflicting
-        endTimeTask1 = task1.time + timedelta(minutes=task1.duration_minutes)
-        endTimeTask2 = task2.time + timedelta(minutes=task2.duration_minutes)
-        return endTimeTask2 >= task1.time and endTimeTask1 >= task2.time
+        return [task for task in self._tasks if task.status == status]
+    
+    def filter_tasks_by_priority(self, priority: Priority) -> list[Task]:
+        """Return a list of tasks that match a given priority.
+
+        Args:
+            priority: The Priority to filter by (e.g. Priority.HIGH).
+        Returns:
+            A list of Task objects that have the specified priority.
+        """
+        return [task for task in self._tasks if task.priority == priority]
