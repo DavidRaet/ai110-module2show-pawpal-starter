@@ -1,4 +1,4 @@
-from pawpal_system import Owner, Pet, Preferences, Task, Priority, Species, PetCareService
+from pawpal_system import Owner, Pet, Preferences, Status, Task, Priority, Species, PetCareService
 
 def main():
     # Create an owner
@@ -10,9 +10,8 @@ def main():
     pet2 = Pet("Mittens", 3, "Siamese", Species.CAT)
     owner.add_pet(pet1)
     owner.add_pet(pet2)
-    
     # Create tasks for pet1
-    service.add_task(Task("Feed Buddy", 30, Priority.MEDIUM, pet1))
+    service.add_task(Task("Feed Buddy", 30, Priority.MEDIUM, pet1, None, Status.COMPLETED))
     service.add_task(Task("Walk Buddy", 60, Priority.MEDIUM, pet1))
     service.add_task(Task("Vet appointment for Buddy", 45, Priority.HIGH, pet1))
 
@@ -26,5 +25,5 @@ def main():
     schedule = service.generate_schedule()
     print("\nGenerated Schedule:")
     for task in schedule.tasks:
-        print(f"  - {task.title} for {task.pet.name} with a {task.priority.value} priority. The status of this task is {task.status.value}")
+        print(f"  - {task.title} for {task.pet.name} with a {task.priority.value} priority. This task will take {task.duration_minutes} minutes. The status of this task is {task.status.value}")
 main()
