@@ -207,30 +207,22 @@ class PetCareService:
     def generate_schedule(self) -> Schedule:
         """Build and return a Schedule from the current task list.
 
-        Baseline algorithm:
-        1. Sort tasks by time.
-        2. Assign start times sequentially, halt the algorithm when there is a conflict.
-        3. Populate Schedule.tasks and Schedule.description, then return it.
+        Algorithm:
+        1. Sort tasks by priority (High → Medium → Low).
+        2. Populate Schedule.tasks and Schedule.description, then return it.
 
         Returns:
             A Schedule containing ordered tasks and a human-readable description.
         """
-        # TODO: Sort self._tasks by time (tasks with time=None should be treated as unscheduled and sorted last)
-        # TODO: Iterate over sorted tasks; use _is_conflict to detect overlaps
-        # TODO: Assign task.time for non-conflicting tasks; halt on first conflict
-        # TODO: Build schedule.description summarising the plan
-        # TODO: Return the completed Schedule
-        sortedTasksByTime = sorted(self._tasks, key=lambda t: (t.time is None, t.time))
-        for i in range(len(sortedTasksByTime)):
-            for j in range(i + 1, len(sortedTasksByTime)):
-                if self._is_conflict(sortedTasksByTime[i], sortedTasksByTime[j]):
-                    # we can alert the UI about the conflict by returning the tasks that are conflicting   
-                    # and halt the algorithm when there is a conflict
-                    break
-        
+        priority_order = {Priority.HIGH: 0, Priority.MEDIUM: 1, Priority.LOW: 2}
+        sorted_tasks = sorted(self._tasks, key=lambda t: priority_order[t.priority])
+
         schedule = Schedule()
-        schedule.tasks = sortedTasksByTime  # This is a placeholder; only non-conflicting tasks should be included
-        schedule.description = "Generated schedule with {} tasks.".format(len(schedule.tasks))
+        schedule.tasks = sorted_tasks
+        schedule.description = (
+            f"Generated schedule with {len(sorted_tasks)} task(s), "
+            "ordered by priority (High \u2192 Medium \u2192 Low)."
+        )
         return schedule
 
     def _is_conflict(self, task1: Task, task2: Task) -> bool:
