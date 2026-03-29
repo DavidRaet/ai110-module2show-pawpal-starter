@@ -1,0 +1,19 @@
+flowchart TD
+    A([Start: generateSchedule]) --> B[Sort tasks by time using tasks.time]
+    B --> C[i = 0]
+    C --> D{i < tasks.length - 1?}
+    D -->|Yes| E{isConflict task i , task i+1 ?}
+    E -->|Conflict Found| F[Halt algorithm\nReturn conflicting task i and task i+1 to client]
+    F --> Z([End: generateSchedule])
+    E -->|No Conflict| G[i = i + 1]
+    G --> D
+    D -->|No| H[Populate Schedule.tasks with sorted tasks]
+    H --> I["Build Schedule.description
+    ─────────────────
+    For each task:
+    • Date / Time
+    • Pet name
+    • Task title
+    • Duration (mins)"]
+    I --> J[Return new Schedule]
+    J --> Z

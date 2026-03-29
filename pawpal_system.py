@@ -209,18 +209,20 @@ class PetCareService:
 
         Algorithm:
         1. Sort tasks by priority (High → Medium → Low).
-        2. Populate Schedule.tasks and Schedule.description, then return it.
+        2. Filter out tasks that are already completed (Status.COMPLETED).
+           This is useful for generating a schedule that focuses on pending and skipped tasks.
+        3. Populate Schedule.tasks and Schedule.description, then return it.
 
         Returns:
             A Schedule containing ordered tasks and a human-readable description.
         """
         priority_order = {Priority.HIGH: 0, Priority.MEDIUM: 1, Priority.LOW: 2}
         sorted_tasks = sorted(self._tasks, key=lambda t: priority_order[t.priority])
-
+        tasksThatNeedToBeCompleted = [task for task in sorted_tasks if task.status != Status.COMPLETED]
         schedule = Schedule()
-        schedule.tasks = sorted_tasks
+        schedule.tasks = tasksThatNeedToBeCompleted
         schedule.description = (
-            f"Generated schedule with {len(sorted_tasks)} task(s), "
+            f"Generated schedule with {len(tasksThatNeedToBeCompleted)} task(s), "
             "ordered by priority (High \u2192 Medium \u2192 Low)."
         )
         return schedule
