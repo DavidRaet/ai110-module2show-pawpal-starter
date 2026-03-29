@@ -1,7 +1,16 @@
 import streamlit as st
+from pawpal_system import (
+    Owner, Pet, Task, PetCareService,
+    Species, Priority, Status, Preferences,
+)
 
 st.set_page_config(page_title="PawPal+", page_icon="🐾", layout="centered")
 st.title("🐾 PawPal+")
+
+# Initialize singleton service once per session
+if "service" not in st.session_state:
+    st.session_state.service = PetCareService.get_instance()
+service = st.session_state.service
 
 # ── Owner & Pet Setup ─────────────────────────────────────────────────────────
 st.header("Owner & Pet")
@@ -23,13 +32,15 @@ with col3:
 with col4:
     species = st.selectbox("Species", ["Dog", "Cat", "Other"])
 
+# Build real backend objects from current form values
+preferences = Preferences(reminder_time=str(reminder_time))
+pet = Pet(name=pet_name, age=int(pet_age), breed=pet_breed, species=Species(species))
+owner = Owner(name=owner_name, preferences=preferences, pets=[pet])
+
 st.divider()
 
 # ── Add Task ──────────────────────────────────────────────────────────────────
 st.header("Add Task")
-
-if "tasks" not in st.session_state:
-    st.session_state.tasks = []
 
 col1, col2, col3 = st.columns(3)
 with col1:
@@ -40,55 +51,66 @@ with col3:
     priority = st.selectbox("Priority", ["High", "Medium", "Low"])
 
 if st.button("Add task"):
-    st.session_state.tasks.append({
-        "title": task_title,
-        "duration_minutes": duration,
-        "priority": priority,
-        "pet": pet_name,
-        "status": "Pending",
-    })
+    task = Task(
+        title=task_title,
+        duration_minutes=int(duration),
+        priority=Priority(priority),
+        pet=pet,
+    )
+    service.add_task(task)
 
 st.divider()
 
 # ── Task List & Management ────────────────────────────────────────────────────
 st.header("Tasks")
 
-if st.session_state.tasks:
+if service._tasks:
+    if "status_filter" not in st.session_state:
+        st.session_state.status_filter = "All"
+    if "priority_filter" not in st.session_state:
+        st.session_state.priority_filter = "All"
+
     col1, col2 = st.columns(2)
     with col1:
         status_filter = st.selectbox(
-            "Filter by status", ["All", "Pending", "Completed", "Skipped"]
+            "Filter by status", ["All", "Pending", "Completed", "Skipped"],
+            key="status_filter"
         )
     with col2:
         priority_filter = st.selectbox(
-            "Filter by priority", ["All", "High", "Medium", "Low"]
+            "Filter by priority", ["All", "High", "Medium", "Low"],
+            key="priority_filter"
         )
 
-    displayed = [
-        (i, t) for i, t in enumerate(st.session_state.tasks)
-        if (status_filter == "All" or t["status"] == status_filter)
-        and (priority_filter == "All" or t["priority"] == priority_filter)
-    ]
+    if status_filter == "All" and priority_filter == "All":
+        displayed = service._tasks
+    elif status_filter == "All":
+        displayed = service.filter_tasks_by_priority(Priority(priority_filter))
+    elif priority_filter == "All":
+        displayed = service.filter_tasks_by_status(Status(status_filter))
+    else:
+        by_status = service.filter_tasks_by_status(Status(status_filter))
+        displayed = [t for t in by_status if t.priority == Priority(priority_filter)]
 
     if displayed:
-        for orig_idx, task in displayed:
+        for i, task in enumerate(displayed):
             with st.container(border=True):
                 col1, col2, col3 = st.columns([4, 1, 1])
                 with col1:
                     st.markdown(
-                        f"**{task['title']}** — {task['duration_minutes']} min"
-                        f" | Priority: **{task['priority']}** | Pet: {task['pet']}"
+                        f"**{task.title}** — {task.duration_minutes} min"
+                        f" | Priority: **{task.priority.value}** | Pet: {task.pet.name}"
                     )
-                    st.caption(f"Status: {task['status']}")
+                    st.caption(f"Status: {task.status.value}")
                 with col2:
-                    if task["status"] != "Completed":
-                        if st.button("Complete", key=f"complete_{orig_idx}"):
-                            st.session_state.tasks[orig_idx]["status"] = "Completed"
+                    if task.status != Status.COMPLETED:
+                        if st.button("Complete", key=f"complete_{i}"):
+                            task.status = Status.COMPLETED
                             st.rerun()
-                with col3:
-                    if task["status"] != "Skipped":
-                        if st.button("Skip", key=f"skip_{orig_idx}"):
-                            st.session_state.tasks[orig_idx]["status"] = "Skipped"
+                with col3:  
+                    if task.status != Status.SKIPPED:
+                        if st.button("Skip", key=f"skip_{i}"):
+                            task.status = Status.SKIPPED
                             st.rerun()
     else:
         st.info("No tasks match the current filters.")
@@ -97,26 +119,19 @@ else:
 
 st.divider()
 
-
+# ── Schedule ──────────────────────────────────────────────────────────────────
 st.header("Schedule")
 st.caption("Generates a priority-ordered plan — completed tasks are excluded.")
 
 if st.button("Generate schedule"):
-    pending = [t for t in st.session_state.tasks if t["status"] != "Completed"]
-    priority_order = {"High": 0, "Medium": 1, "Low": 2}
-    sorted_tasks = sorted(pending, key=lambda t: priority_order[t["priority"]])
-
-    if sorted_tasks:
-        description = (
-            f"Generated schedule with {len(sorted_tasks)} task(s), "
-            "ordered by priority (High → Medium → Low)."
-        )
-        st.success(description)
-        for task in sorted_tasks:
+    schedule = service.generate_schedule()
+    if schedule.tasks:
+        st.success(schedule.description)
+        for task in schedule.tasks:
             st.markdown(
-                f"- **{task['title']}** ({task['duration_minutes']} min)"
-                f" — {task['priority']} priority | Status: {task['status']}"
-                f" | Pet: {task['pet']}"
+                f"- **{task.title}** ({task.duration_minutes} min)"
+                f" — {task.priority.value} priority | Status: {task.status.value}"
+                f" | Pet: {task.pet.name}"
             )
     else:
         st.info("All tasks are completed — nothing left to schedule!")
