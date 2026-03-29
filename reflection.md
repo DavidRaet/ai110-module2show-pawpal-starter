@@ -7,6 +7,59 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+A user should be able to do... 
+
+1. Provide their own basic information and their pet 
+2. CRUD a pet care task (Create, Read, Update, Delete)
+3. The assistant should also accommodate specific features such as 
+time availability and priority of a task, and the owner's preferences.   
+4. Generate a schedule based on those tasks and a description that explains
+the given schedule.  
+
+Classes that should be defined including its individual attributes and methods:
+
+class Preferences
+  - reminderTime: String
+
+class Owner
+  - name: String
+  - preferences: Preferences
+  - pets: Pet[]
+
+class Pet
+  - name: String
+  - age: int
+  - breed: String
+  - species: enum Species {Cat, Dog, Other}
+
+class Task
+  - title: String
+  - durationMinutes: int
+  - time: DateTime
+  - priority: enum Priority {High, Medium, Low}
+  - status: enum Status {Pending, Completed, Skipped}
+  - pet: Pet
+
+class Schedule
+  - tasks: Task[]
+  - description: String
+
+class PetCareService (singleton)
+  - addTask(Task): void
+  - removeTask(Task): void
+  - updateTask(Task): void
+  - generateSchedule(Schedule): Schedule
+  - isConflict(Task, Task): boolean
+    └─ (used internally by generateSchedule)
+
+Connections:
+Owner has multiple Pets (Owner -1*> Pet)
+
+Pets --> Tasks (Pets can have multiple Tasks)
+Tasks can be tied to one Pet (Tasks -1> Pet)
+Schedule can have multiple Pets (Schedule -1*> Pet)
+Schedule can have one Owner (Schedule -> Owner)
+
 **b. Design changes**
 
 - Did your design change during implementation?
