@@ -65,6 +65,12 @@ Schedule can have one Owner (Schedule -> Owner)
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
 
+So, when ideating on the class of schedule, I changed the location of it's "generate_schedule" method
+to a PetCareService class that is responsible for handling all of the business logic such as CRUD'ing 
+tasks. I figured that I would separate the role of schedule as the entity that stores the sorted list of 
+tasks, and the implementation of its creation as part of the PetCareService. Overall, I made this change
+to accommodate separation of concerns of the schedule class and the method that creates it. 
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
