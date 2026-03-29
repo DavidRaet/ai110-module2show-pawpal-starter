@@ -7,6 +7,7 @@ classDiagram
         +String name
         +Preferences preferences
         +Pet[] pets
+        +addPet(pet: Pet) void
     }
 
     class Pet {
@@ -53,11 +54,15 @@ classDiagram
 
     class PetCareService {
         <<singleton>>
-        +addTask(Task) void
-        +removeTask(Task) void
-        +updateTask(Task) void
-        +generateSchedule(Schedule) Schedule
-        -isConflict(Task, Task) boolean
+        -tasks : List~Task~
+        +getInstance() PetCareService
+        +addTask(task: Task) void
+        +removeTask(task: Task) void
+        +updateTask(task: Task) void
+        +getTasksForPet(pet: Pet) List
+        +generateSchedule() Schedule
+        +filterTasksByStatus(status: Status) List
+        +filterTasksByPriority(priority: Priority) List
     }
 
     Owner "1" --> "1" Preferences : has
