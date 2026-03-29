@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional
 
@@ -183,19 +183,30 @@ class PetCareService:
         """Build and return a Schedule from the current task list.
 
         Baseline algorithm:
-        1. Sort tasks by priority (HIGH first).
-        2. Assign start times sequentially, skipping tasks that conflict.
+        1. Sort tasks by time.
+        2. Assign start times sequentially, halt the algorithm when there is a conflict.
         3. Populate Schedule.tasks and Schedule.description, then return it.
 
         Returns:
             A Schedule containing ordered tasks and a human-readable description.
         """
-        # TODO: Sort self._tasks by priority
+        # TODO: Sort self._tasks by time (tasks with time=None should be treated as unscheduled and sorted last)
         # TODO: Iterate over sorted tasks; use _is_conflict to detect overlaps
-        # TODO: Assign task.time for non-conflicting tasks; mark others SKIPPED
+        # TODO: Assign task.time for non-conflicting tasks; halt on first conflict
         # TODO: Build schedule.description summarising the plan
         # TODO: Return the completed Schedule
-        pass
+        sortedTasksByTime = sorted(self._tasks, key=lambda t: (t.time is None, t.time))
+        for i in range(len(sortedTasksByTime)):
+            for j in range(i + 1, len(sortedTasksByTime)):
+                if self._is_conflict(sortedTasksByTime[i], sortedTasksByTime[j]):
+                    # we can alert the UI about the conflict by returning the tasks that are conflicting   
+                    # and halt the algorithm when there is a conflict
+                    break
+        
+        schedule = Schedule()
+        schedule.tasks = sortedTasksByTime  # This is a placeholder; only non-conflicting tasks should be included
+        schedule.description = "Generated schedule with {} tasks.".format(len(schedule.tasks))
+        return schedule
 
     def _is_conflict(self, task1: Task, task2: Task) -> bool:
         """Check whether two tasks overlap in time.
@@ -209,4 +220,8 @@ class PetCareService:
         """
         # TODO: Compute end times for both tasks using time + timedelta(minutes=duration_minutes)
         # TODO: Return True if the intervals overlap, False if they are disjoint
-        pass
+        if task1.time is None or task2.time is None:
+            return False  # Unschedulable tasks are not considered conflicting
+        endTimeTask1 = task1.time + timedelta(minutes=task1.duration_minutes)
+        endTimeTask2 = task2.time + timedelta(minutes=task2.duration_minutes)
+        return endTimeTask2 >= task1.time and endTimeTask1 >= task2.time
