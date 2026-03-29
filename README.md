@@ -1,43 +1,75 @@
-# PawPal+ (Module 2 Project)
+# PawPal+
 
-You are building **PawPal+**, a Streamlit app that helps a pet owner plan care tasks for their pet.
+A Streamlit app for daily pet care task scheduling.
 
-## Scenario
+## Overview
 
-A busy pet owner needs help staying consistent with pet care. They want an assistant that can:
+- Lets an owner register pets, add care tasks (walks, feeding, meds, etc.), and generate a prioritized daily schedule.
+- All task management and scheduling logic is handled by a single `PetCareService` singleton.
+- Stack: Python · Streamlit · pytest
 
-- Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
-- Consider constraints (time available, priority, owner preferences)
-- Produce a daily plan and explain why it chose that plan
+---
 
-Your job is to design the system first (UML), then implement the logic in Python, then connect it to the Streamlit UI.
+## Architecture
 
-## What you will build
+### Enums
 
-Your final app should:
+| Enum | Values |
+|------|--------|
+| `Species` | `CAT`, `DOG`, `OTHER` |
+| `Priority` | `HIGH`, `MEDIUM`, `LOW` |
+| `Status` | `PENDING`, `COMPLETED`, `SKIPPED` |
 
-- Let a user enter basic owner + pet info
-- Let a user add/edit tasks (duration + priority at minimum)
-- Generate a daily schedule/plan based on constraints and priorities
-- Display the plan clearly (and ideally explain the reasoning)
-- Include tests for the most important scheduling behaviors
+### Classes
 
-## Getting started
+| Class | Attributes | Key Methods | Role |
+|-------|-----------|-------------|------|
+| `Preferences` | `reminder_time` | — | Owner-level scheduling settings |
+| `Pet` | `name`, `age`, `breed`, `species` | — | Represents a single pet |
+| `Owner` | `name`, `preferences`, `pets[]` | `add_pet()` | Links an owner to their pets |
+| `Task` | `title`, `duration_minutes`, `priority`, `pet`, `time`, `status` | — | A schedulable pet-care activity |
+| `Schedule` | `tasks[]`, `description` | — | Output of the scheduling algorithm |
+| `PetCareService` | `tasks[]` (singleton) | `add_task()`, `remove_task()`, `update_task()`, `get_tasks_for_pet()`, `filter_tasks_by_status()`, `filter_tasks_by_priority()`, `generate_schedule()` | Singleton; manages all tasks and produces schedules |
 
-### Setup
+---
+
+## Scheduling Algorithm
+
+`PetCareService.generate_schedule()`:
+
+1. Filters out any tasks with `Status.COMPLETED`.
+2. Sorts remaining tasks by priority: `HIGH` → `MEDIUM` → `LOW`.
+3. Returns a `Schedule` containing the ordered task list and a summary description string.
+
+---
+
+## Setup
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Suggested workflow
+## Run the App
 
-1. Read the scenario carefully and identify requirements and edge cases.
-2. Draft a UML diagram (classes, attributes, methods, relationships).
-3. Convert UML into Python class stubs (no logic yet).
-4. Implement scheduling logic in small increments.
-5. Add tests to verify key behaviors.
-6. Connect your logic to the Streamlit UI in `app.py`.
-7. Refine UML so it matches what you actually built.
+```bash
+streamlit run app.py
+```
+## Run the App
+
+```bash
+python main.py
+```
+
+## Run Tests
+
+```bash
+pytest -v
+```
+or
+```bash
+python -m pytest 
+```
+
+Tests live in `tests/test_pawpal.py` and cover: singleton behavior, task add/remove, priority ordering, completed-task exclusion, and per-pet filtering.
