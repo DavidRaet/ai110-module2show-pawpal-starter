@@ -1,0 +1,71 @@
+classDiagram
+    class Preferences {
+        +String reminderTime
+    }
+
+    class Owner {
+        +String name
+        +Preferences preferences
+        +Pet[] pets
+    }
+
+    class Pet {
+        +String name
+        +int age
+        +String breed
+        +Species species
+    }
+
+    class Species {
+        <<enumeration>>
+        Cat
+        Dog
+        Other
+    }
+
+    class Task {
+        +String title
+        +int durationMinutes
+        +DateTime time
+        +Priority priority
+        +Status status
+        +Pet pet
+    }
+
+    class Priority {
+        <<enumeration>>
+        High
+        Medium
+        Low
+    }
+
+    class Status {
+        <<enumeration>>
+        Pending
+        Completed
+        Skipped
+    }
+
+    class Schedule {
+        +Task[] tasks
+        +String description
+    }
+
+    class PetCareService {
+        <<singleton>>
+        +addTask(Task) void
+        +removeTask(Task) void
+        +updateTask(Task) void
+        +generateSchedule(Schedule) Schedule
+        -isConflict(Task, Task) boolean
+    }
+
+    Owner "1" --> "1" Preferences : has
+    Owner "1" --> "1..*" Pet : owns
+    Pet --> Species : is
+    Task --> Pet : assigned to
+    Task --> Priority : has
+    Task --> Status : has
+    Schedule "1" --> "0..*" Task : contains
+    PetCareService ..> Schedule : generates
+    PetCareService ..> Task : manages
